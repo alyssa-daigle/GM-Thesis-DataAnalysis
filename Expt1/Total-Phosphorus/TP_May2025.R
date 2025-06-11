@@ -7,9 +7,7 @@ library(cowplot)
 library(tibble)
 library(ggtext)
 
-setwd("~/Library/CloudStorage/OneDrive-UniversityofNewHampshire/GreenManureProject/Expt1/expt1_dataanalysis/TP")
-
-TP_dat <- read.csv("/Users/alyssadaigle/Desktop/csvs/Expt1_TP.csv")
+TP_dat <- read.csv("Expt1_TP.csv")
 
 TP_dat <- TP_dat |> 
     separate(treatment, into = c("geno", "cyano", "micro"), sep = "_", remove = FALSE)
@@ -162,5 +160,3 @@ TPmicro_combined_plot <- plot_grid(TPplot_microH, TPplot_others, TP_variance_plo
 TPmicro_combined_plot 
 
 ggsave("Expt1_TPmicro_combined_plot.jpg", TPmicro_combined_plot, width = 8, height = 3.25, dpi = 500)
-ggsave("~/Library/CloudStorage/OneDrive-UniversityofNewHampshire/GreenManureProject/WRITING/plots/Expt1_TPmicro_combined_plot.jpg", TPmicro_combined_plot, width = 8, height = 3.25, dpi = 500)
-
