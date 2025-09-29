@@ -8,9 +8,9 @@ library(tibble)
 # --------------------------
 # themes and variance function
 # --------------------------
-source("thesis_theme.R") # TPTN_theme() and TPvariance_theme()
-source("variance_explained.R") # ssbyvar()
-source("config_paths.R") # hidden paths
+source("thesis_theme.R")
+source("variance_explained.R")
+source("config_paths.R")
 
 # --------------------------
 # data
@@ -114,7 +114,6 @@ TPplot_microH <- ggplot(tp_microH, aes(x = geno, y = ppb, color = cyano)) +
         size = 0.5,
         position = position_dodge(width = 0.6)
     ) +
-    scale_color_manual(values = c("N" = "black", "Y" = "aquamarine4")) +
     scale_x_discrete(labels = geno_labels) +
     ylim(0, 50000) +
     labs(
@@ -160,7 +159,6 @@ TPplot_others <- ggplot(
         size = 0.5,
         position = position_dodge(width = 0.6)
     ) +
-    scale_color_manual(values = c("N" = "black", "Y" = "aquamarine4")) +
     scale_x_discrete(labels = micro_labels) +
     ylim(0, 50000) +
     labs(
@@ -215,7 +213,7 @@ TPmicro_combined_plot <- plot_grid(
 TPmicro_combined_plot
 
 ggsave(
-    file.path(plots_folder, "Expt1_TPmicro_combined_plot.jpg"),
+    file.path("plots", "Expt1_TPmicro_combined_plot.jpg"),
     TPmicro_combined_plot,
     width = 8,
     height = 3.25,
