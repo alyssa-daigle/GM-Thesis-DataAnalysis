@@ -1,0 +1,5 @@
+# Ignore config with paths (hidden)
+config_paths.R
+
+# Ignore plots folder
+plots/
