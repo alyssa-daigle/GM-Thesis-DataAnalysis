@@ -4,7 +4,7 @@ source("thesis_theme.R")
 source(file.path(path, "R/variance_explained.R"))
 
 # load and separate data
-data <- read.csv(file.path(
+tpdata <- read.csv(file.path(
     data,
     "total_phosphorus.csv"
 )) |>
@@ -16,7 +16,7 @@ data <- read.csv(file.path(
     )
 
 # checking normality
-shapiro.test(data$ppb)
+shapiro.test(tpdata$ppb)
 
 # ---------------------------------------------------------------------------------------------
 # linear models
@@ -24,7 +24,7 @@ shapiro.test(data$ppb)
 # first, see which effect contributes to most variance
 mod <- MCMCglmm(
     ppb ~ cyano + geno + micro,
-    data = data,
+    data = tpdata,
     verbose = FALSE,
     nitt = 101000,
     thin = 10,
@@ -36,7 +36,7 @@ summary(mod)
 # diving into micro effects more
 
 # home microbiome only, cyano Y vs N
-microH <- filter(data, micro == "H")
+microH <- filter(tpdata, micro == "H")
 mod_microH <- MCMCglmm(
     ppb ~ -1 + cyano:geno,
     data = microH, # removing intercept to show absolute means
@@ -48,7 +48,7 @@ mod_microH <- MCMCglmm(
 summary(mod_microH)
 
 # other microbiomes, cyano Y vs N
-noHmicro <- data |>
+noHmicro <- tpdata |>
     filter(micro != "H") |>
     mutate(micro = factor(micro, levels = c("N", "KF", "ODR")))
 mod_noHmicro <- MCMCglmm(
@@ -173,9 +173,9 @@ TPplot_others <- ggplot(
 TPvariance_data <- tibble(
     Factor = c("Cyanobacteria", "Genotype", "Microbiome"),
     Variance = c(
-        ssbyvar(data$ppb, data$cyano),
-        ssbyvar(data$ppb, data$geno),
-        ssbyvar(data$ppb, data$micro)
+        ssbyvar(tpdata$ppb, tpdata$cyano),
+        ssbyvar(tpdata$ppb, tpdata$geno),
+        ssbyvar(tpdata$ppb, tpdata$micro)
     )
 )
 
