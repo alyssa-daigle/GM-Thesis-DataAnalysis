@@ -64,7 +64,7 @@ summary(mod_noHmicro)
 # Posterior summary plot
 # shows credible intervals for each interaction
 # no CI overlap -> significantly different
-post_summ <- summary(mod_noHmicro)$solutions
+post_summ <- summary(mod_noHmicro)$solutions # replace with mod_microH/mod_noHmicro to compare
 ci_df <- as.data.frame(post_summ)
 ci_df$Effect <- rownames(ci_df)
 names(ci_df)[1:3] <- c("PostMean", "Lower95CI", "Upper95CI")
