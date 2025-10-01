@@ -77,7 +77,6 @@ ggplot(ci_df, aes(x = Effect, y = PostMean)) +
         y = "Posterior Mean ± 95% CI",
         x = "Effect"
     ) +
-    TPTN_theme() +
     theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 # ---------------------------------------------------------------------------------------------
