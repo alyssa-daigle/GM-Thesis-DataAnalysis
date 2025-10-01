@@ -1,5 +1,8 @@
-# Ignore config with paths (hidden)
+#config
 config_paths.R
 
-# Ignore plots folder
+#plots folder
 plots/
+
+#sampling map 
+Sampling-Map/
