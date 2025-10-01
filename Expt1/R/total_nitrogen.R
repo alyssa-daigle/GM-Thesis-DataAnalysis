@@ -1,91 +1,110 @@
-library(MCMCglmm)
-library(dplyr)
-library(tidyr)
-library(ggplot2)
-library(cowplot)
-library(tibble)
+source("config_paths.R")
+source("globals.R")
+source("thesis_theme.R")
+source(file.path(path, "R/variance_explained.R"))
 
-# --------------------------
-# Themes and variance function
-# --------------------------
-source("thesis_theme.R") # TPTN_theme() now includes cyanobacteria color scale
-source("variance_explained.R") # ssbyvar()
-source("config_paths.R") # data_folder path
-
-# --------------------------
-# Load data
-# --------------------------
-tn_dat <- read.csv(file.path(
-  data_folder,
-  "Total-Nitrogen",
-  "TN_Master_Data.csv"
-)) %>%
+# load data
+tndata <- read.csv(file.path(
+  data,
+  "total_nitrogen.csv"
+)) |>
   mutate(actual_TN = TN_avg * 125) # account for dilution
 
+# load metadata
 metadata <- read.csv(file.path(
-  data_folder,
-  "Total-Nitrogen",
-  "TNmetadata.csv"
-)) %>%
-  filter(sample %in% tn_dat$sample)
+  data,
+  "total_nitrogen_meta.csv"
+)) |>
+  filter(sample %in% tndata$sample)
 
-tn_dat <- tn_dat %>%
-  left_join(metadata, by = "sample") %>%
+tndata <- tndata |>
+  left_join(metadata, by = "sample") |>
   separate(
     treatment,
     into = c("geno", "cyano", "micro"),
     sep = "_",
     remove = FALSE
-  ) %>%
+  ) |>
   filter(
     !is.na(micro),
     actual_TN >= 0,
     sample != "36a2" # drop outlier
-  ) %>%
+  ) |>
   mutate(
     geno = factor(geno, levels = c("DR", "LR", "M", "TF", "UM", "W")),
     micro = factor(micro, levels = c("N", "H", "KF", "ODR"))
   )
 
-geno_labels <- c(
-  "DR" = "Durham \nReservoir",
-  "LR" = "LaRoche \nPond",
-  "M" = "Mill \nPond",
-  "TF" = "Thompson \nFarm",
-  "UM" = "Upper \nMill Pond",
-  "W" = "Woodman \nRoad"
-)
-micro_labels <- c(
-  "H" = "Home",
-  "ODR" = "Dairy \nFarm",
-  "N" = "None",
-  "KF" = "Kingman \nFarm"
-)
+# checking normality
+shapiro.test(tndata$actual_TN)
 
-# --------------------------
-# Normality check
-# --------------------------
-shapiro.test(tn_dat$actual_TN)
+# ---------------------------------------------------------------------------------------------
+# linear models
 
-# --------------------------
-# GLMM
-# --------------------------
-tn_mod1 <- MCMCglmm(
-  actual_TN ~ geno:micro + micro:cyano + micro + cyano + geno,
-  data = tn_dat,
+# first, see which effect contributes to most variance
+mod <- MCMCglmm(
+  actual_TN ~ micro + cyano + geno,
+  data = tndata,
   verbose = FALSE,
   nitt = 100000,
   thin = 500,
   burnin = 5000
 )
-summary(tn_mod1)
+summary(mod)
 
-# --------------------------
+# cyano and micro seem to have a greater affect than geno
+# diving into micro effects more
+microH <- filter(tndata, micro == "H")
+mod_microH <- MCMCglmm(
+  actual_TN ~ -1 + cyano:geno,
+  data = microH, # removing intercept to show absolute means
+  verbose = FALSE,
+  nitt = 101000,
+  thin = 10,
+  burnin = 1000
+)
+summary(mod_microH)
+
+# other microbiomes, cyano Y vs N
+noHmicro <- tndata |>
+  filter(micro != "H") |>
+  mutate(micro = factor(micro, levels = c("N", "KF", "ODR")))
+mod_noHmicro <- MCMCglmm(
+  actual_TN ~ -1 + cyano:micro,
+  data = noHmicro,
+  verbose = FALSE,
+  nitt = 101000,
+  thin = 10,
+  burnin = 1000
+)
+summary(mod_noHmicro)
+
+# Posterior summary plot
+# shows credible intervals for each interaction
+# no CI overlap -> significantly different
+post_summ <- summary(mod_microH)$solutions # replace with mod_microH/mod_noHmicro to compare
+ci_df <- as.data.frame(post_summ)
+ci_df$Effect <- rownames(ci_df)
+names(ci_df)[1:3] <- c("PostMean", "Lower95CI", "Upper95CI")
+
+ggplot(ci_df, aes(x = Effect, y = PostMean)) +
+  geom_point(size = 3) +
+  geom_errorbar(aes(ymin = Lower95CI, ymax = Upper95CI), width = 0.2) +
+  labs(
+    title = "Posterior Means and 95% Credible Intervals",
+    y = "Posterior Mean ± 95% CI",
+    x = "Effect"
+  ) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+# ---------------------------------------------------------------------------------------------
 # Plots
-# --------------------------
-# 1. Home microbiome by genotype
-home_plot <- tn_dat %>%
-  filter(micro == "H") %>%
+microH$cyano <- factor(microH$cyano, levels = c("N", "Y"))
+noHmicro$cyano <- factor(noHmicro$cyano, levels = c("N", "Y"))
+
+# 1. Home microbiome alone
+home_plot <- tndata |>
+  filter(micro == "H") |>
   ggplot(aes(x = geno, y = actual_TN, color = cyano)) +
   stat_summary(
     fun = mean,
@@ -103,6 +122,9 @@ home_plot <- tn_dat %>%
     position = position_dodge(0.6)
   ) +
   scale_x_discrete(labels = geno_labels) +
+  scale_color_manual(
+    values = c("N" = "black", "Y" = "aquamarine4"),
+  ) +
   labs(
     title = "Home Microbiome by Genotype",
     x = "Duckweed Genotype",
@@ -114,8 +136,8 @@ home_plot <- tn_dat %>%
 home_plot
 
 # 2. Other microbiomes
-othermicro_plot <- tn_dat %>%
-  filter(micro != "H") %>%
+othermicro_plot <- tndata |>
+  filter(micro != "H") |>
   ggplot(aes(x = micro, y = actual_TN, color = cyano)) +
   stat_summary(
     fun = mean,
@@ -133,6 +155,9 @@ othermicro_plot <- tn_dat %>%
     position = position_dodge(0.6)
   ) +
   scale_x_discrete(labels = micro_labels) +
+  scale_color_manual(
+    values = c("N" = "black", "Y" = "aquamarine4"),
+  ) +
   labs(
     title = "Other Microbiomes, Genotypes Combined",
     x = "Microbiome Treatment",
@@ -148,18 +173,17 @@ othermicro_plot <- tn_dat %>%
   )
 othermicro_plot
 
-# --------------------------
-# Variance explained
-# --------------------------
+# applying variance explained function
 tn_variance_data <- tibble(
   Factor = c("Cyanobacteria", "Genotype", "Microbiome"),
   Variance = c(
-    ssbyvar(tn_dat$actual_TN, tn_dat$cyano),
-    ssbyvar(tn_dat$actual_TN, tn_dat$geno),
-    ssbyvar(tn_dat$actual_TN, tn_dat$micro)
+    ssbyvar(tndata$actual_TN, tndata$cyano),
+    ssbyvar(tndata$actual_TN, tndata$geno),
+    ssbyvar(tndata$actual_TN, tndata$micro)
   )
 )
 
+# variance explained plot
 tn_variance_plot <- ggplot(
   tn_variance_data,
   aes(x = "", y = Variance, fill = Factor)
@@ -170,9 +194,8 @@ tn_variance_plot <- ggplot(
   TPvariance_theme()
 tn_variance_plot
 
-# --------------------------
-# Combine plots
-# --------------------------
+# ---------------------------------------------------------------------------------------------
+# Combine and save
 TN_combined_plot <- plot_grid(
   home_plot,
   othermicro_plot,
