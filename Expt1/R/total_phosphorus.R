@@ -1,24 +1,12 @@
-library(MCMCglmm)
-library(dplyr)
-library(tidyr)
-library(ggplot2)
-library(cowplot)
-library(tibble)
-
-# --------------------------
-# themes and variance function
-# --------------------------
-source("thesis_theme.R")
-source("variance_explained.R")
 source("config_paths.R")
+source("globals.R")
+source("thesis_theme.R")
+source(file.path(path, "R/variance_explained.R"))
 
-# --------------------------
-# data
-# --------------------------
-TP_dat <- read.csv(file.path(
-    data_folder,
-    "Total-Phosphorus",
-    "Expt1_TP.csv"
+# load and separate data
+data <- read.csv(file.path(
+    data,
+    "total_phosphorus.csv"
 )) |>
     separate(
         treatment,
@@ -27,34 +15,31 @@ TP_dat <- read.csv(file.path(
         remove = FALSE
     )
 
-geno_labels <- c(
-    "DR" = "Durham \nReservoir",
-    "LR" = "LaRoche \nPond",
-    "M" = "Mill \nPond",
-    "TF" = "Thompson \nFarm",
-    "UM" = "Upper \nMill Pond",
-    "W" = "Woodman \nRoad"
-)
-micro_labels <- c(
-    "H" = "Home",
-    "ODR" = "Dairy \nFarm",
-    "N" = "None",
-    "KF" = "Kingman \nFarm"
-)
+# checking normality
+shapiro.test(data$ppb)
 
-# --------------------------
-# normality check
-# --------------------------
-shapiro.test(TP_dat$ppb)
+# ---------------------------------------------------------------------------------------------
+# linear models
 
-# --------------------------
-# GLMMs
-# --------------------------
-# Home microbiome
-tp_microH <- filter(TP_dat, micro == "H")
+# first, see which effect contributes to most variance
+mod <- MCMCglmm(
+    ppb ~ cyano + geno + micro,
+    data = data,
+    verbose = FALSE,
+    nitt = 101000,
+    thin = 10,
+    burnin = 1000
+)
+summary(mod)
+
+# cyano and micro seem to have a greater affect than geno
+# diving into micro effects more
+
+# home microbiome only, cyano Y vs N
+microH <- filter(data, micro == "H")
 mod_microH <- MCMCglmm(
     ppb ~ -1 + cyano:geno,
-    data = tp_microH,
+    data = microH, # removing intercept to show absolute means
     verbose = FALSE,
     nitt = 101000,
     thin = 10,
@@ -62,14 +47,13 @@ mod_microH <- MCMCglmm(
 )
 summary(mod_microH)
 
-# Other microbiomes
-tpdat_noHmicro <- TP_dat |>
+# other microbiomes, cyano Y vs N
+noHmicro <- data |>
     filter(micro != "H") |>
     mutate(micro = factor(micro, levels = c("N", "KF", "ODR")))
-
 mod_noHmicro <- MCMCglmm(
     ppb ~ -1 + cyano:micro,
-    data = tpdat_noHmicro,
+    data = noHmicro,
     verbose = FALSE,
     nitt = 101000,
     thin = 10,
@@ -78,6 +62,8 @@ mod_noHmicro <- MCMCglmm(
 summary(mod_noHmicro)
 
 # Posterior summary plot
+# shows credible intervals for each interaction
+# no CI overlap -> significantly different
 post_summ <- summary(mod_noHmicro)$solutions
 ci_df <- as.data.frame(post_summ)
 ci_df$Effect <- rownames(ci_df)
@@ -94,11 +80,13 @@ ggplot(ci_df, aes(x = Effect, y = PostMean)) +
     TPTN_theme() +
     theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
-# --------------------------
+# ---------------------------------------------------------------------------------------------
 # Plots
-# --------------------------
-# 1. Home Microbiome
-TPplot_microH <- ggplot(tp_microH, aes(x = geno, y = ppb, color = cyano)) +
+microH$cyano <- factor(microH$cyano, levels = c("N", "Y"))
+noHmicro$cyano <- factor(noHmicro$cyano, levels = c("N", "Y"))
+
+# 1. Home Microbiome alone
+TPplot_microH <- ggplot(microH, aes(x = geno, y = ppb, color = cyano)) +
     stat_summary(
         fun = mean,
         geom = "point",
@@ -115,6 +103,9 @@ TPplot_microH <- ggplot(tp_microH, aes(x = geno, y = ppb, color = cyano)) +
         position = position_dodge(width = 0.6)
     ) +
     scale_x_discrete(labels = geno_labels) +
+    scale_color_manual(
+        values = c("N" = "black", "Y" = "aquamarine4"),
+    ) +
     ylim(0, 50000) +
     labs(
         title = "Home Microbiome by Genotype",
@@ -141,7 +132,7 @@ TPplot_microH <- ggplot(tp_microH, aes(x = geno, y = ppb, color = cyano)) +
 
 # 2. Other Microbiomes
 TPplot_others <- ggplot(
-    tpdat_noHmicro,
+    noHmicro,
     aes(x = micro, y = ppb, color = cyano)
 ) +
     stat_summary(
@@ -160,6 +151,9 @@ TPplot_others <- ggplot(
         position = position_dodge(width = 0.6)
     ) +
     scale_x_discrete(labels = micro_labels) +
+    scale_color_manual(
+        values = c("N" = "black", "Y" = "aquamarine4"),
+    ) +
     ylim(0, 50000) +
     labs(
         title = "Other Microbiomes, Genotypes Combined",
@@ -175,18 +169,17 @@ TPplot_others <- ggplot(
     ) +
     geom_hline(yintercept = 45570, linetype = "dashed", color = "red", size = 1)
 
-# --------------------------
-# Variance explained
-# --------------------------
+# applying variance explained function
 TPvariance_data <- tibble(
     Factor = c("Cyanobacteria", "Genotype", "Microbiome"),
     Variance = c(
-        ssbyvar(TP_dat$ppb, TP_dat$cyano),
-        ssbyvar(TP_dat$ppb, TP_dat$geno),
-        ssbyvar(TP_dat$ppb, TP_dat$micro)
+        ssbyvar(data$ppb, data$cyano),
+        ssbyvar(data$ppb, data$geno),
+        ssbyvar(data$ppb, data$micro)
     )
 )
 
+# variance explained plot
 TP_variance_plot <- ggplot(
     TPvariance_data,
     aes(x = "", y = Variance, fill = Factor)
@@ -199,9 +192,8 @@ TP_variance_plot <- ggplot(
     ) +
     TPvariance_theme()
 
-# --------------------------
+# ---------------------------------------------------------------------------------------------
 # Combine and save
-# --------------------------
 TPmicro_combined_plot <- plot_grid(
     TPplot_microH,
     TPplot_others,
@@ -209,7 +201,6 @@ TPmicro_combined_plot <- plot_grid(
     nrow = 1,
     rel_widths = c(1.5, 1, 0.65)
 )
-
 TPmicro_combined_plot
 
 ggsave(

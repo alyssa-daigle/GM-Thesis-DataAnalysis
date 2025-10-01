@@ -2,18 +2,26 @@
 library(ggplot2)
 library(grid) # for unit()
 
+geno_labels <- c(
+  "DR" = "Durham \nReservoir",
+  "LR" = "LaRoche \nPond",
+  "M" = "Mill \nPond",
+  "TF" = "Thompson \nFarm",
+  "UM" = "Upper \nMill Pond",
+  "W" = "Woodman \nRoad"
+)
+micro_labels <- c(
+  "H" = "Home",
+  "ODR" = "Dairy \nFarm",
+  "N" = "None",
+  "KF" = "Kingman \nFarm"
+)
+
 TPTN_theme <- function(base_size = 7, base_family = "") {
   list(
-    # Color scale for cyanobacteria treatment
-    scale_color_manual(values = c("N" = "black", "Y" = "aquamarine4")),
-
-    # Theme
     theme_classic(base_size = base_size, base_family = base_family) %+replace%
       theme(
-        # Titles
         plot.title = element_text(hjust = 0.5, face = "bold", size = base_size),
-
-        # Axis
         axis.title.x = element_text(size = base_size, margin = margin(t = 8)),
         axis.title.y = element_text(
           size = base_size,
@@ -24,8 +32,6 @@ TPTN_theme <- function(base_size = 7, base_family = "") {
         axis.text.y = element_text(size = base_size - 1),
         axis.ticks.x = element_line(size = 0.4),
         axis.ticks.y = element_line(size = 0.4),
-
-        # Legend
         legend.position = "right",
         legend.justification = "center",
         legend.title = element_text(size = base_size),
@@ -33,8 +39,6 @@ TPTN_theme <- function(base_size = 7, base_family = "") {
         legend.key.size = unit(0.25, "cm"),
         legend.box = "vertical",
         legend.box.just = "center",
-
-        # Panel/Background
         panel.grid = element_blank(),
         panel.border = element_blank()
       )
