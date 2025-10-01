@@ -17,7 +17,7 @@ micro_labels <- c(
   "KF" = "Kingman \nFarm"
 )
 
-TPTN_theme <- function(base_size = 7, base_family = "") {
+expt1_theme <- function(base_size = 7, base_family = "") {
   list(
     theme_classic(base_size = base_size, base_family = base_family) %+replace%
       theme(
@@ -45,7 +45,7 @@ TPTN_theme <- function(base_size = 7, base_family = "") {
   )
 }
 
-TPvariance_theme <- function(base_size = 7, base_family = "") {
+variance_theme <- function(base_size = 7, base_family = "") {
   list(
     # Fill scale
     scale_fill_manual(
