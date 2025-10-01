@@ -9,7 +9,7 @@ library(ggtext)
 # --------------------------
 # Themes and variance function
 # --------------------------
-source("thesis_theme.R") # TPTN_theme() now includes cyanobacteria colors
+source("thesis_theme.R") # expt1_theme() now includes cyanobacteria colors
 source("variance_explained.R") # ssbyvar()
 source("config_paths.R") # data_folder path
 plots_folder <- "plots"
@@ -21,8 +21,8 @@ ELISA_dat <- read.csv(file.path(
     data_folder,
     "ELISA",
     "Expt1_Phase2_ELISA.csv"
-)) %>%
-    select(-c(X, X.1, X.2, empty.tube.weight)) %>%
+)) |>
+    select(-c(X, X.1, X.2, empty.tube.weight)) |>
     separate(
         treatment,
         into = c("geno", "cyano", "micro"),
@@ -31,8 +31,8 @@ ELISA_dat <- read.csv(file.path(
     )
 
 # Remove outliers
-ELISA_dat_filtered <- ELISA_dat %>%
-    filter(!is.na(cyano)) %>%
+ELISA_dat_filtered <- ELISA_dat |>
+    filter(!is.na(cyano)) |>
     filter(
         !(sample == "25_c2" & treatment == "M_N_N"),
         !(sample == "26_b3" & treatment == "W_Y_N")
@@ -65,13 +65,13 @@ ggplot(ci_df, aes(x = Effect, y = PostMean)) +
         y = "Posterior Mean ± 95% CI",
         x = "Effect"
     ) +
-    TPTN_theme() +
+    expt1_theme() +
     theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 # --------------------------
 # Plot MC by microbiome source
 # --------------------------
-ELISA_dat_filtered <- ELISA_dat_filtered %>%
+ELISA_dat_filtered <- ELISA_dat_filtered |>
     mutate(micro = factor(micro, levels = c("N", "H", "KF", "ODR")))
 
 MCplot <- ggplot(ELISA_dat_filtered, aes(x = micro, y = MC, color = cyano)) +
@@ -103,7 +103,7 @@ MCplot <- ggplot(ELISA_dat_filtered, aes(x = micro, y = MC, color = cyano)) +
         y = "Microcystin (µg/g Duckweed)",
         color = "Cyanobacteria Treatment"
     ) +
-    TPTN_theme() +
+    expt1_theme() +
     theme(legend.position = "none")
 
 MCplot
@@ -130,7 +130,7 @@ MC_variance_plot <- ggplot(
         limits = c(0, 1),
         expand = expansion(mult = c(0, 0.05))
     ) +
-    TPvariance_theme()
+    variance_theme()
 
 MC_variance_plot
 
@@ -157,11 +157,11 @@ ggsave(
 # --------------------------
 # Line plot by genotype
 # --------------------------
-MC_line_plot <- ELISA_dat %>%
-    drop_na() %>%
-    group_by(cyano, geno) %>%
-    summarise(mean_conc = mean(MC), sd_conc = sd(MC), .groups = 'drop') %>%
-    mutate(se_conc = sd_conc / sqrt(n())) %>%
+MC_line_plot <- ELISA_dat |>
+    drop_na() |>
+    group_by(cyano, geno) |>
+    summarise(mean_conc = mean(MC), sd_conc = sd(MC), .groups = 'drop') |>
+    mutate(se_conc = sd_conc / sqrt(n())) |>
     ggplot(aes(
         x = cyano,
         y = mean_conc,
@@ -247,7 +247,7 @@ MCplot_micro <- ggplot(
         y = "Microcystin (µg/g Duckweed)",
         color = "*M. aeruginosa* <br> Spike"
     ) +
-    TPTN_theme() +
+    expt1_theme() +
     theme(
         legend.position = "right",
         legend.title = ggtext::element_markdown(size = 9),

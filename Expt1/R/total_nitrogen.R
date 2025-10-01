@@ -131,7 +131,7 @@ home_plot <- tndata |>
     y = "Total Nitrogen (µg/L)",
     color = "Cyanobacteria \nTreatment"
   ) +
-  TPTN_theme() +
+  expt1_theme() +
   theme(legend.position = "none")
 home_plot
 
@@ -164,7 +164,7 @@ othermicro_plot <- tndata |>
     y = "",
     color = "Cyanobacteria \nTreatment"
   ) +
-  TPTN_theme() +
+  expt1_theme() +
   theme(
     legend.position = "none",
     axis.title.y = element_blank(),
@@ -191,7 +191,7 @@ tn_variance_plot <- ggplot(
   geom_bar(stat = "identity", position = "stack") +
   labs(y = "Variation Explained") +
   scale_y_continuous(limits = c(0, 1), expand = expansion(mult = c(0, 0.05))) +
-  TPvariance_theme()
+  variance_theme()
 tn_variance_plot
 
 # ---------------------------------------------------------------------------------------------

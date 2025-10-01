@@ -12,7 +12,7 @@ lettuce_score <- read.csv("/Users/alyssadaigle/Desktop/csvs/lettuce_scores.csv")
 lettuce_score <- lettuce_score |>
     select(!c(X12.Jul.24, X15.Jul.24, X15JulQualitativenotes, X))
 
-lettuce_score <- lettuce_score %>%
+lettuce_score <- lettuce_score |>
     mutate(
         jul15NumericGerm = factor(
             jul15NumericGerm,
@@ -28,8 +28,8 @@ lettuce_score$J15numerichealth <- as.numeric(as.character(
     lettuce_score$Jul15HealthScore
 ))
 
-lettuce_score_NC <- lettuce_score %>%
-    filter(Genotype != "control") %>%
+lettuce_score_NC <- lettuce_score |>
+    filter(Genotype != "control") |>
     drop_na(jul15NumericGerm, Jul15HealthScore)
 
 shapiro.test(lettuce_score_NC$J15numerichealth)
@@ -43,9 +43,9 @@ mod <- MCMCglmm(
 )
 summary(mod)
 
-label_positions <- lettuce_score_NC %>%
-    group_by(Cyano) %>%
-    summarise(max_score = max(J15numerichealth, na.rm = TRUE)) %>%
+label_positions <- lettuce_score_NC |>
+    group_by(Cyano) |>
+    summarise(max_score = max(J15numerichealth, na.rm = TRUE)) |>
     mutate(label = c("a", "a"))
 
 lettuce_score_NC$Microbe <- factor(

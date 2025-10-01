@@ -1,19 +1,14 @@
-library(MCMCglmm)
-library(dplyr)
-library(tidyverse)
-library(ggplot2)
-library(cowplot)
+source("config_paths.R")
+source("globals.R")
+source("thesis_theme.R")
+source(file.path(path, "R/variance_explained.R"))
 
-setwd(
-    "~/Library/CloudStorage/OneDrive-UniversityofNewHampshire/GreenManureProject/Expt1/expt1_dataanalysis/Growth"
-)
-
-dat <- read.csv("~/Desktop/csvs/Expt1_Batch2_frondarea.csv")
-
-dat <- dat %>%
-    mutate(RGR = as.numeric(RGR))
-
-dat <- dat |>
+# load data
+growthdata <- read.csv(file.path(
+    data,
+    "frondarea.csv"
+)) |>
+    mutate(RGR = as.numeric(RGR)) |>
     separate(
         treatment,
         into = c("geno", "cyano", "micro"),
@@ -21,12 +16,14 @@ dat <- dat |>
         remove = FALSE
     )
 
-#both normally distributed
-shapiro.test(dat$RGR)
+# checking normality
+shapiro.test(growthdata$RGR)
 
+# ---------------------------------------------------------------------------------------------
+# linear models
 mod <- MCMCglmm(
     RGR ~ -1 + cyano:micro,
-    data = dat,
+    data = growthdata,
     verbose = F,
     nitt = 11000,
     thin = 10,
@@ -34,6 +31,9 @@ mod <- MCMCglmm(
 )
 summary(mod)
 
+# Posterior summary plot
+# shows credible intervals for each interaction
+# no CI overlap -> significantly different
 post_summ <- summary(mod)$solutions
 ci_df <- as.data.frame(post_summ)
 ci_df$Effect <- rownames(ci_df)
@@ -51,11 +51,13 @@ ggplot(ci_df, aes(x = Effect, y = PostMean)) +
     theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 #order micro by N, H, KF, then ODR
-dat$micro <- factor(dat$micro, levels = c("N", "H", "KF", "ODR"))
+growthdata$micro <- factor(growthdata$micro, levels = c("N", "H", "KF", "ODR"))
 
 # Create plot
-growth_plot <- ggplot(data = dat, aes(x = micro, y = RGR, color = cyano)) +
-    #geom_jitter(shape = 1, width = .3, size = 2,) +
+growth_plot <- ggplot(
+    data = growthdata,
+    aes(x = micro, y = RGR, color = cyano)
+) +
     stat_summary(
         fun = mean,
         geom = "point",
@@ -72,93 +74,36 @@ growth_plot <- ggplot(data = dat, aes(x = micro, y = RGR, color = cyano)) +
         position = position_dodge(width = .5)
     ) +
     scale_color_manual(values = c("N" = "black", "Y" = "aquamarine4")) +
-    scale_x_discrete(
-        labels = c(
-            "N" = "Uninoculated",
-            "H" = "Home",
-            "KF" = "Kingman Farm",
-            "ODR" = "Dairy Farm"
-        )
-    ) +
+    scale_x_discrete(labels = micro_labels) +
     labs(x = "Microbiome Source", y = "Duckweed Relative Growth Rate") +
     theme_cowplot() +
-    theme(
-        legend.position = "none",
-        axis.title.x = ggtext::element_markdown(size = 9),
-        axis.title.y = element_text(size = 9),
-        axis.text.x = element_text(size = 8),
-        axis.text.y = element_text(size = 8)
-    )
-
+    expt1_theme() +
+    theme(legend.position = "none")
 growth_plot
 
-ssbyvar <- function(response, category.vec) {
-    means <- tapply(response, category.vec, mean, na.rm = T)
-    ssresid <- sum(sapply(sort(unique(category.vec)), function(z) {
-        sum(
-            (response[category.vec == z] - means[names(means) == z])^2,
-            na.rm = T
-        )
-    }))
-    sstot <- sum((response - mean(response, na.rm = T))^2, na.rm = T)
-    sst <- (sstot - ssresid)
-    return(sst / sstot)
-}
-
-growth_variance_cyano <- ssbyvar(dat$RGR, dat$cyano)
-growth_variance_geno <- ssbyvar(dat$RGR, dat$geno)
-growth_variance_micro <- ssbyvar(dat$RGR, dat$micro)
-
-# Create a data frame with variance and error
-growth_variance_data <- data.frame(
+# applying variance explained function
+growth_variance_data <- tibble(
     Factor = c("Cyanobacteria", "Genotype", "Microbiome"),
     Variance = c(
-        growth_variance_cyano,
-        growth_variance_geno,
-        growth_variance_micro
+        ssbyvar(growthdata$RGR, growthdata$cyano),
+        ssbyvar(growthdata$RGR, growthdata$cyano),
+        ssbyvar(growthdata$RGR, growthdata$cyano)
     )
 )
 
-# variation explained plot
+
+# variance explained plot
 growth_variance_plot <- ggplot(
     growth_variance_data,
     aes(x = "", y = Variance, fill = Factor)
 ) +
     geom_bar(stat = "identity", position = "stack") +
-    labs(x = "", y = "Variation Explained", fill = "Effect") +
-    scale_fill_manual(
-        values = c(
-            "Cyanobacteria" = "aquamarine4",
-            "Genotype" = "darkblue",
-            "Microbiome" = "wheat"
-        )
-    ) +
-    guides(
-        fill = guide_legend(
-            title.position = "top",
-            title.hjust = .5,
-            override.aes = list(size = 1)
-        )
-    ) +
+    labs(y = "Variation Explained") +
     scale_y_continuous(
-        limits = c(0, 1), # Set the limits between 0 and 1
+        limits = c(0, 1),
         expand = expansion(mult = c(0, 0.05))
     ) +
-    theme_cowplot() +
-    theme(
-        legend.position = "right",
-        legend.justification = "center",
-        legend.box.just = "center",
-        legend.title = element_text(size = 7),
-        legend.text = element_text(size = 6),
-        legend.key.size = unit(0.2, "cm"),
-        legend.box = "vertical",
-        legend.box.spacing = unit(0, "cm"),
-        axis.text = element_text(size = 6),
-        axis.title = element_text(size = 7),
-        axis.ticks.x = element_blank(),
-    )
-
+    variance_theme()
 growth_variance_plot
 
 growth_combined_plot <- plot_grid(
@@ -171,16 +116,9 @@ growth_combined_plot <- plot_grid(
 growth_combined_plot
 
 ggsave(
-    "Expt1_growth_plot.jpg",
+    file.path("plots", "Expt1_growth_plot.jpg"),
     growth_combined_plot,
-    width = 6,
-    height = 3.5,
-    dpi = 500
-)
-ggsave(
-    "~/Library/CloudStorage/OneDrive-UniversityofNewHampshire/GreenManureProject/WRITING/plots/Expt1_growth_plot.jpg",
-    growth_combined_plot,
-    width = 6,
-    height = 3.5,
+    width = 8,
+    height = 3.25,
     dpi = 500
 )

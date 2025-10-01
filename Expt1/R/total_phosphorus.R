@@ -111,7 +111,7 @@ TPplot_microH <- ggplot(microH, aes(x = geno, y = ppb, color = cyano)) +
         x = "Duckweed Genotype",
         y = "Total Phosphorus (µg/L)"
     ) +
-    TPTN_theme() +
+    expt1_theme() +
     theme(legend.position = "none") +
     geom_hline(
         yintercept = 45570,
@@ -159,7 +159,7 @@ TPplot_others <- ggplot(
         x = "Microbiome",
         y = ""
     ) +
-    TPTN_theme() +
+    expt1_theme() +
     theme(
         legend.position = "none",
         axis.title.y = element_blank(),
@@ -189,7 +189,7 @@ TP_variance_plot <- ggplot(
         limits = c(0, 1),
         expand = expansion(mult = c(0, 0.05))
     ) +
-    TPvariance_theme()
+    variance_theme()
 
 # ---------------------------------------------------------------------------------------------
 # Combine and save
