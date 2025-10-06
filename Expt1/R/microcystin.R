@@ -3,9 +3,7 @@ source("globals.R")
 source("thesis_theme.R")
 source(file.path(path, "R/variance_explained.R"))
 
-# --------------------------
 # Load data
-# --------------------------
 ELISA_dat <- read.csv(file.path(
     data,
     "microcystin.csv"
@@ -98,9 +96,7 @@ MCplot <- ggplot(ELISA_dat_filtered, aes(x = micro, y = MC, color = cyano)) +
 
 MCplot
 
-# --------------------------
 # Variance explained
-# --------------------------
 MC_variance_data <- tibble(
     Factor = c("Cyanobacteria", "Microbiome", "Genotype"),
     Variance = c(
@@ -124,9 +120,7 @@ MC_variance_plot <- ggplot(
 
 MC_variance_plot
 
-# --------------------------
 # Combined plot
-# --------------------------
 MC_combined_plot <- plot_grid(
     MCplot,
     MC_variance_plot,
@@ -144,9 +138,7 @@ ggsave(
     dpi = 500
 )
 
-# --------------------------
 # Line plot by genotype
-# --------------------------
 MC_line_plot <- ELISA_dat |>
     drop_na() |>
     group_by(cyano, geno) |>

@@ -19,7 +19,6 @@ growthdata <- read.csv(file.path(
 # checking normality
 shapiro.test(growthdata$RGR)
 
-# ---------------------------------------------------------------------------------------------
 # linear models
 mod <- MCMCglmm(
     RGR ~ -1 + cyano:micro,
@@ -90,7 +89,6 @@ growth_variance_data <- tibble(
         ssbyvar(growthdata$RGR, growthdata$cyano)
     )
 )
-
 
 # variance explained plot
 growth_variance_plot <- ggplot(

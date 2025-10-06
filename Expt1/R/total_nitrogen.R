@@ -38,7 +38,6 @@ tndata <- tndata |>
 # checking normality
 shapiro.test(tndata$actual_TN)
 
-# ---------------------------------------------------------------------------------------------
 # linear models
 
 # first, see which effect contributes to most variance
@@ -97,7 +96,6 @@ ggplot(ci_df, aes(x = Effect, y = PostMean)) +
   ) +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
-# ---------------------------------------------------------------------------------------------
 # Plots
 microH$cyano <- factor(microH$cyano, levels = c("N", "Y"))
 noHmicro$cyano <- factor(noHmicro$cyano, levels = c("N", "Y"))
@@ -194,7 +192,6 @@ tn_variance_plot <- ggplot(
   variance_theme()
 tn_variance_plot
 
-# ---------------------------------------------------------------------------------------------
 # Combine and save
 TN_combined_plot <- plot_grid(
   home_plot,
