@@ -11,7 +11,9 @@ invisible(
     "forcats",
     "ggpubr",
     "tibble",
-    "viridis"
+    "viridis",
+    "ggpubr",
+    "patchwork"
   ) |>
     lapply(function(x) {
       if (suppressMessages(!require(x, character.only = TRUE))) {
