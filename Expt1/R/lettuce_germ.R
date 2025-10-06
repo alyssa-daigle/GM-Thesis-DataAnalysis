@@ -1,18 +1,14 @@
-library(tidyverse)
-library(cowplot)
-library(ggpubr)
-library(MCMCglmm)
+source("config_paths.R")
+source("globals.R")
+source("thesis_theme.R")
+source(file.path(path, "R/variance_explained.R"))
 
-setwd(
-    "~/Library/CloudStorage/OneDrive-UniversityofNewHampshire/GreenManureProject/Expt1/expt1_dataanalysis/lettuce"
-)
-
-lettuce_score <- read.csv("/Users/alyssadaigle/Desktop/csvs/lettuce_scores.csv")
-
-lettuce_score <- lettuce_score |>
-    select(!c(X12.Jul.24, X15.Jul.24, X15JulQualitativenotes, X))
-
-lettuce_score <- lettuce_score |>
+# load and reformat
+lettuce_score <- read.csv(file.path(
+    data,
+    "lettuce_scores.csv"
+)) |>
+    select(!c(X12.Jul.24, X15.Jul.24, X15JulQualitativenotes, X)) |>
     mutate(
         jul15NumericGerm = factor(
             jul15NumericGerm,
@@ -24,17 +20,24 @@ lettuce_score <- lettuce_score |>
         )
     )
 
+#
 lettuce_score$J15numerichealth <- as.numeric(as.character(
     lettuce_score$Jul15HealthScore
 ))
 
+# filtering out the control
 lettuce_score_NC <- lettuce_score |>
     filter(Genotype != "control") |>
     drop_na(jul15NumericGerm, Jul15HealthScore)
 
+
+# check normality
+# W = 0.9212, p-value = 2.578e-13
 shapiro.test(lettuce_score_NC$J15numerichealth)
+
+# linear modeling
 mod <- MCMCglmm(
-    J15numerichealth ~ -1 + Microbe:Cyano,
+    J15numerichealth ~ -1 + Microbe:Cyano, # removing intercept to show absolute means
     data = lettuce_score_NC,
     verbose = F,
     nitt = 101000,
@@ -51,13 +54,6 @@ label_positions <- lettuce_score_NC |>
 lettuce_score_NC$Microbe <- factor(
     lettuce_score_NC$Microbe,
     levels = c("N", "H", "KF", "ODR")
-)
-
-micro_labels <- c(
-    "H" = "Home",
-    "ODR" = "Dairy Farm",
-    "N" = "None",
-    "KF" = "Kingman Farm"
 )
 
 lettuce_plot <- lettuce_score_NC |>
@@ -82,49 +78,14 @@ lettuce_plot <- lettuce_score_NC |>
     scale_y_continuous(limits = c(0, 7), breaks = seq(0, 6, by = 1)) +
     labs(x = "Microbiome Source", y = "Lettuce Germinant Health Score") +
     theme_cowplot() +
-    theme(
-        legend.position = "none",
-        axis.title.x = ggtext::element_markdown(size = 9),
-        axis.title.y = element_text(size = 9),
-        axis.text.x = element_text(size = 8),
-        axis.text.y = element_text(size = 8)
-    )
+    thesis_theme()
 
-lettuce_plot
-
-ssbyvar <- function(response, category.vec) {
-    means <- tapply(response, category.vec, mean, na.rm = T)
-    ssresid <- sum(sapply(sort(unique(category.vec)), function(z) {
-        sum(
-            (response[category.vec == z] - means[names(means) == z])^2,
-            na.rm = T
-        )
-    }))
-    sstot <- sum((response - mean(response, na.rm = T))^2, na.rm = T)
-    sst <- (sstot - ssresid)
-    return(sst / sstot)
-}
-
-lettuce_variance_cyano <- ssbyvar(
-    lettuce_score$J15numerichealth,
-    lettuce_score$Cyano
-)
-lettuce_variance_geno <- ssbyvar(
-    lettuce_score$J15numerichealth,
-    lettuce_score$Genotype
-)
-lettuce_variance_micro <- ssbyvar(
-    lettuce_score$J15numerichealth,
-    lettuce_score$Microbe
-)
-
-# Create a data frame with variance and error
-lettuce_variance_data <- data.frame(
+lettuce_variance_data <- tibble(
     Factor = c("Cyanobacteria", "Genotype", "Microbiome"),
     Variance = c(
-        lettuce_variance_cyano,
-        lettuce_variance_geno,
-        lettuce_variance_micro
+        ssbyvar(lettuce_score$J15numerichealth, lettuce_score$Cyano),
+        ssbyvar(lettuce_score$J15numerichealth, lettuce_score$Genotype),
+        ssbyvar(lettuce_score$J15numerichealth, lettuce_score$Microbe)
     )
 )
 
@@ -154,22 +115,7 @@ lettuce_variance_plot <- ggplot(
         expand = expansion(mult = c(0, 0.05))
     ) +
     theme_cowplot() +
-    theme(
-        legend.position = "right",
-        legend.justification = "center",
-        legend.box.just = "center",
-        legend.title = element_text(size = 7),
-        legend.text = element_text(size = 6),
-        legend.key.size = unit(0.2, "cm"),
-        legend.box = "vertical",
-        legend.box.spacing = unit(0, "cm"),
-        axis.text = element_text(size = 6),
-        axis.title = element_text(size = 7),
-        axis.ticks.x = element_blank(),
-    )
-
-
-lettuce_variance_plot
+    variance_theme()
 
 lettuce_combined_plot <- plot_grid(
     lettuce_plot,
@@ -178,19 +124,10 @@ lettuce_combined_plot <- plot_grid(
     rel_widths = c(5, 2)
 )
 
-lettuce_combined_plot
-
-ggsave2(
-    "Expt1_lettuce_combined_plot.jpg",
-    plot = lettuce_combined_plot,
-    width = 6,
-    height = 3.5,
-    dpi = 500
-)
 ggsave(
-    "~/Library/CloudStorage/OneDrive-UniversityofNewHampshire/GreenManureProject/WRITING/plots/Expt1_lettuce_combined_plot.jpg",
+    file.path("plots", "Expt1_lettuce_germ.jpg"),
     lettuce_combined_plot,
-    width = 6,
-    height = 3.5,
+    width = 8,
+    height = 3.25,
     dpi = 500
 )
