@@ -1,26 +1,14 @@
-library(MCMCglmm)
-library(dplyr)
-library(tidyr)
-library(ggplot2)
-library(cowplot)
-library(viridis)
-library(ggtext)
-
-# --------------------------
-# Themes and variance function
-# --------------------------
-source("thesis_theme.R") # expt1_theme() now includes cyanobacteria colors
-source("variance_explained.R") # ssbyvar()
-source("config_paths.R") # data_folder path
-plots_folder <- "plots"
+source("config_paths.R")
+source("globals.R")
+source("thesis_theme.R")
+source(file.path(path, "R/variance_explained.R"))
 
 # --------------------------
 # Load data
 # --------------------------
 ELISA_dat <- read.csv(file.path(
-    data_folder,
-    "ELISA",
-    "Expt1_Phase2_ELISA.csv"
+    data,
+    "microcystin.csv"
 )) |>
     select(-c(X, X.1, X.2, empty.tube.weight)) |>
     separate(
@@ -38,9 +26,11 @@ ELISA_dat_filtered <- ELISA_dat |>
         !(sample == "26_b3" & treatment == "W_Y_N")
     )
 
-# --------------------------
-# GLMM
-# --------------------------
+# check normality
+# W = 0.86971, p-value = 9.934e-12
+shapiro.test(ELISA_dat_filtered$MC)
+
+# linear models
 ELISA_glmm <- MCMCglmm(
     MC ~ -1 + cyano:micro,
     data = ELISA_dat_filtered,
@@ -68,9 +58,8 @@ ggplot(ci_df, aes(x = Effect, y = PostMean)) +
     expt1_theme() +
     theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
-# --------------------------
+
 # Plot MC by microbiome source
-# --------------------------
 ELISA_dat_filtered <- ELISA_dat_filtered |>
     mutate(micro = factor(micro, levels = c("N", "H", "KF", "ODR")))
 
@@ -90,6 +79,7 @@ MCplot <- ggplot(ELISA_dat_filtered, aes(x = micro, y = MC, color = cyano)) +
         size = 1,
         position = position_dodge(0.5)
     ) +
+    scale_color_manual(values = c("N" = "black", "Y" = "aquamarine4")) +
     scale_x_discrete(
         labels = c(
             "N" = "Uninoculated",
@@ -182,6 +172,7 @@ MC_line_plot <- ELISA_dat |>
         color = "Duckweed\nGenotype"
     ) +
     scale_color_viridis(discrete = TRUE) +
+    theme_classic() +
     theme(
         legend.position = "right",
         axis.title.x = ggtext::element_markdown(size = 9),
@@ -200,66 +191,3 @@ ggsave(
     height = 3,
     dpi = 300
 )
-
-# --------------------------
-# Split by microbiome
-# --------------------------
-micro_mod <- MCMCglmm(
-    MC ~ -1 + micro:cyano,
-    data = ELISA_dat_filtered,
-    verbose = FALSE,
-    nitt = 101000,
-    thin = 10,
-    burnin = 1000
-)
-summary(micro_mod)
-
-micro_labels <- c(
-    "H" = "Home",
-    "ODR" = "Dairy \nFarm",
-    "N" = "None",
-    "KF" = "Kingman \nFarm"
-)
-
-MCplot_micro <- ggplot(
-    ELISA_dat_filtered,
-    aes(x = micro, y = MC, color = cyano)
-) +
-    stat_summary(
-        fun = mean,
-        geom = "point",
-        size = 4,
-        shape = 16,
-        position = position_dodge(0.6)
-    ) +
-    stat_summary(
-        fun.data = mean_sdl,
-        fun.args = list(mult = 1),
-        geom = "errorbar",
-        width = 0.3,
-        size = 1,
-        position = position_dodge(0.6)
-    ) +
-    scale_color_manual(labels = c("N" = "No", "Y" = "Yes")) +
-    scale_x_discrete(labels = micro_labels) +
-    labs(
-        x = "Microbiome Source",
-        y = "Microcystin (µg/g Duckweed)",
-        color = "*M. aeruginosa* <br> Spike"
-    ) +
-    expt1_theme() +
-    theme(
-        legend.position = "right",
-        legend.title = ggtext::element_markdown(size = 9),
-        legend.text = element_text(size = 8)
-    )
-
-MCplot_micro
-
-#ggsave(
-#    file.path(plots_folder, "Expt1_MC_micro_plot.jpg"),
-#    plot = MCplot_micro,
-#    width = 5,
-#    height = 3,
-#   dpi = 500
-#)
