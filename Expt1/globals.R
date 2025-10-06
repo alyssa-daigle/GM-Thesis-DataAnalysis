@@ -10,7 +10,8 @@ invisible(
     "cowplot",
     "forcats",
     "ggpubr",
-    "tibble"
+    "tibble",
+    "viridis"
   ) |>
     lapply(function(x) {
       if (suppressMessages(!require(x, character.only = TRUE))) {

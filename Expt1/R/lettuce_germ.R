@@ -78,7 +78,7 @@ lettuce_plot <- lettuce_score_NC |>
     scale_y_continuous(limits = c(0, 7), breaks = seq(0, 6, by = 1)) +
     labs(x = "Microbiome Source", y = "Lettuce Germinant Health Score") +
     theme_cowplot() +
-    thesis_theme()
+    expt1_theme()
 
 lettuce_variance_data <- tibble(
     Factor = c("Cyanobacteria", "Genotype", "Microbiome"),
