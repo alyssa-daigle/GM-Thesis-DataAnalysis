@@ -1,9 +1,13 @@
-source("config_paths.R")
-source("globals.R")
-source("thesis_theme.R")
-source(file.path(path, "R/variance_explained.R"))
+# using source() is basically "calling" those other scripts, which loads anything within those scripts
+
+source("config_paths.R") # loads the necessary file paths
+source("globals.R") # load the librarys needed for this script
+source("thesis_theme.R") # loads the plot theming
+source(file.path(path, "R/variance_explained.R")) # loads the ssbyvar variance function
 
 # Read and summarize data
+
+# microcystin data
 elisa <- read.csv(file.path(
     data,
     "microcystin.csv"
@@ -12,6 +16,7 @@ elisa <- read.csv(file.path(
     group_by(treatment) |>
     summarise(mean_MC = mean(MC, na.rm = TRUE))
 
+# total phosphorus data
 tp <- read.csv(file.path(
     data,
     "total_phosphorus.csv"
@@ -20,6 +25,7 @@ tp <- read.csv(file.path(
     group_by(treatment) |>
     summarise(mean_tp = mean(ppb, na.rm = TRUE))
 
+# relative (duckweed) growth rate data
 rgr <- read.csv(file.path(
     data,
     "frondarea.csv"
@@ -35,6 +41,7 @@ combined_dat <- elisa |>
 
 
 # Save to JPEG file
+# using base R to plot these
 jpeg(
     file.path(plots_folder, "Expt1_correlations.jpeg"),
     width = 800,

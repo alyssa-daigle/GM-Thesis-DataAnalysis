@@ -1,10 +1,12 @@
+# load packages necessary for analyses
+
 invisible(
   c(
-    "MCMCglmm", #
-    "readxl", #
-    "dplyr", #
+    "MCMCglmm",
+    "readxl",
+    "dplyr",
     "tidyr",
-    "purrr", #
+    "purrr",
     "stringr",
     "ggplot2",
     "cowplot",

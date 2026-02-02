@@ -10,17 +10,20 @@ lettuce_score <- read.csv(file.path(
 )) |>
     select(!c(X12.Jul.24, X15.Jul.24, X15JulQualitativenotes, X)) |>
     mutate(
+        # setting the germination to be a score, 0-3
         jul15NumericGerm = factor(
             jul15NumericGerm,
             levels = c("0", "1", "2", "3")
         ),
+
+        # setting the health to be a score, 0-6
         Jul15HealthScore = factor(
             Jul15HealthScore,
             levels = c("0", "1", "2", "3", "4", "5", "6")
         )
     )
 
-#
+# setting scores as numeric
 lettuce_score$J15numerichealth <- as.numeric(as.character(
     lettuce_score$Jul15HealthScore
 ))
@@ -80,6 +83,7 @@ lettuce_plot <- lettuce_score_NC |>
     theme_cowplot() +
     expt1_theme()
 
+# using variance function
 lettuce_variance_data <- tibble(
     Factor = c("Cyanobacteria", "Genotype", "Microbiome"),
     Variance = c(

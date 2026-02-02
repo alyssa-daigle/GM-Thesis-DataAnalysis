@@ -45,6 +45,8 @@ ci_df <- as.data.frame(post_summ)
 ci_df$Effect <- rownames(ci_df)
 names(ci_df)[1:3] <- c("PostMean", "Lower95CI", "Upper95CI")
 
+
+# plot to check CI overlap (no overlap = significantly different)
 ggplot(ci_df, aes(x = Effect, y = PostMean)) +
     geom_point(size = 3) +
     geom_errorbar(aes(ymin = Lower95CI, ymax = Upper95CI), width = 0.2) +

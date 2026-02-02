@@ -17,6 +17,7 @@ metadata <- read.csv(file.path(
 )) |>
   filter(sample %in% tndata$sample)
 
+# join metadata to overall data
 tndata <- tndata |>
   left_join(metadata, by = "sample") |>
   separate(

@@ -18,7 +18,6 @@ tpdata <- read.csv(file.path(
 # checking normality
 shapiro.test(tpdata$ppb)
 
-# ---------------------------------------------------------------------------------------------
 # linear models
 
 # first, see which effect contributes to most variance
