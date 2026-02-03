@@ -1,8 +1,11 @@
 #config
 config_paths.R
 
-#plots folder
-plots/
+#plots
+*.png
+*.jpg
+*.jpeg
+
 
 #sampling map 
 Sampling-Map/
