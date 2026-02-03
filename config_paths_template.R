@@ -5,7 +5,7 @@
 path <- "path/to/Expt1/directory"
 
 # this object should be the directory within the Expt 1 directory where all the data (csvs) are stored
-data <- "path/to/Expt1/directory/datafolder"
+datapath <- "path/to/Expt1/directory/datafolder"
 
 # Folder for plots (absolute path)
 # I prevent this folder from appearing on the repo by including it in the .gitignore

@@ -5,7 +5,7 @@ source(file.path(path, "R/variance_explained.R"))
 
 # load data
 growthdata <- read.csv(file.path(
-    data,
+    datapath,
     "frondarea.csv"
 )) |>
     mutate(RGR = as.numeric(RGR)) |>

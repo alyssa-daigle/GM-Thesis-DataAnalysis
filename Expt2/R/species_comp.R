@@ -4,7 +4,7 @@ source("thesis_theme.R")
 
 # load data
 species_comp <- read.csv(file.path(
-    data,
+    datapath,
     "species_comp.csv"
 )) |>
     mutate(pond = sub("^([^-]+-[^-]+).*", "\\1", sample)) |>

@@ -5,7 +5,7 @@ source(file.path(path, "R/variance_explained.R"))
 
 # Load data
 ELISA_dat <- read.csv(file.path(
-    data,
+    datapath,
     "microcystin.csv"
 )) |>
     select(-c(X, X.1, X.2, empty.tube.weight)) |>

@@ -5,7 +5,7 @@ source(file.path(path, "R/variance_explained.R"))
 
 # load and reformat
 lettuce_score <- read.csv(file.path(
-    data,
+    datapath,
     "lettuce_scores.csv"
 )) |>
     select(!c(X12.Jul.24, X15.Jul.24, X15JulQualitativenotes, X)) |>

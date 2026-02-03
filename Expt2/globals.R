@@ -15,7 +15,15 @@ invisible(
     "ggpubr",
     "patchwork",
     "stringr",
-    "ggtext"
+    "ggtext",
+    "ggbreak",
+    "multcompView",
+    "knitr",
+    "kableExtra",
+    "tibble",
+    "ggsignif",
+    "ggpmisc",
+    "coda"
   ) |>
     lapply(function(x) {
       if (suppressMessages(!require(x, character.only = TRUE))) {

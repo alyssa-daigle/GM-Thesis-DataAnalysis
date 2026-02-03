@@ -5,7 +5,7 @@ source(file.path(path, "R/variance_explained.R"))
 
 # load and separate data
 tpdata <- read.csv(file.path(
-    data,
+    datapath,
     "total_phosphorus.csv"
 )) |>
     separate(

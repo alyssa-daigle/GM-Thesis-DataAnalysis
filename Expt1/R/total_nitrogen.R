@@ -5,14 +5,14 @@ source(file.path(path, "R/variance_explained.R"))
 
 # load data
 tndata <- read.csv(file.path(
-  data,
+  datapath,
   "total_nitrogen.csv"
 )) |>
   mutate(actual_TN = TN_avg * 125) # account for dilution
 
 # load metadata
 metadata <- read.csv(file.path(
-  data,
+  datapath,
   "total_nitrogen_meta.csv"
 )) |>
   filter(sample %in% tndata$sample)

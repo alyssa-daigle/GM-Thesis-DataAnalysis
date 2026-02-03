@@ -9,7 +9,7 @@ source(file.path(path, "R/variance_explained.R")) # loads the ssbyvar variance f
 
 # microcystin data
 elisa <- read.csv(file.path(
-    data,
+    datapath,
     "microcystin.csv"
 )) |>
     select(treatment, MC) |>
@@ -18,7 +18,7 @@ elisa <- read.csv(file.path(
 
 # total phosphorus data
 tp <- read.csv(file.path(
-    data,
+    datapath,
     "total_phosphorus.csv"
 )) |>
     select(treatment, ppb) |>
@@ -27,7 +27,7 @@ tp <- read.csv(file.path(
 
 # relative (duckweed) growth rate data
 rgr <- read.csv(file.path(
-    data,
+    datapath,
     "frondarea.csv"
 )) |>
     select(treatment, RGR) |>
