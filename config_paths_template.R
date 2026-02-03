@@ -1,10 +1,10 @@
 # Root project folder
 
-# this object should be set to your overarching Expt 1 directory
-# For example, my Expt 1 direcotry contains R/, data/, globals.R, and thesis_theme.R
+# this object should be set to your overarching Expt 1 or Expt 2 directory
+# For example, my Expt 1/2 directories each contain R/, data/, globals.R, and thesis_theme.R
 path <- "path/to/Expt1/directory"
 
-# this object should be the directory within the Expt 1 directory where all the data (csvs) are stored
+# this object should be the directory within the Expt directory where all the data (csvs) are stored
 datapath <- "path/to/Expt1/directory/datafolder"
 
 # Folder for plots (absolute path)
